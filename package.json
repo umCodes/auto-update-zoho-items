@@ -19,8 +19,6 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@types/express": "^5.0.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "dotenv": "^17.4.2"
   }
 }

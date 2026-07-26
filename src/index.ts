@@ -3,6 +3,7 @@ import { refreshZohoAccessToken } from "./middlewares/zoho.middleware.js";
 import { editAndUpdateItems, pushDailyEInvoices } from "./utils/zoho.js";
 import { createLogger } from "./utils/logger.js";
 
+console.log("Cron started");
 config();
 
 const logger = createLogger("app");
@@ -32,6 +33,6 @@ async function runDailyUpdate() {
 }
 
 await runDailyUpdate();
-
+console.log("Cron Finished");
 
 

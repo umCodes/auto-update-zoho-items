@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { itemEditPrompt } from "../prompts/itemEdit.prompt.js";
-import { getItem, getItems, updateItem } from "../services/zoho.services.js";
+import { getItem, getItems, getInvoices, pushEInvoice, updateItem } from "../services/zoho.services.js";
 import { OpenRouterCreditLimitError, promptOpenRouter } from "../services/openrouter.services.js";
 import { Item } from "../types/zoho.js";
 import { createLogger } from "./logger.js";
@@ -203,4 +203,57 @@ export async function editAndUpdateItems(
   logger.success(`Daily item processing run finished. Updated ${processed} items.`);
 
   return { updatedItems, processed, state, paused: false };
+}
+
+
+
+function getDateDaysBefore(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export async function pushDailyEInvoices(authToken: string) {
+  const startDate = getDateDaysBefore(3);
+  const results: Array<{ invoice_id: string | number; status: "success" | "failed"; error?: string }> = [];
+  let page = 1;
+  let hasMorePages = true;
+
+  logger.info(`Starting e-invoice push run for invoices from ${startDate} onward.`);
+
+  while (hasMorePages) {
+    const response = await getInvoices(authToken, startDate, page);
+    const invoices = (response.invoices ?? []) as Array<{ invoice_id: string | number; invoice_number?: string }>;
+
+    if (!invoices.length) {
+      logger.warn(`No invoices found on page ${page} for date after ${startDate}.`);
+      break;
+    }
+
+    for (const invoice of invoices) {
+      const invoiceId = String(invoice.invoice_id);
+
+      try {
+        await pushEInvoice(authToken, invoiceId);
+        logger.success(`Pushed e-invoice ${invoiceId}`);
+        results.push({ invoice_id: invoice.invoice_id, status: "success" });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.error(`Failed to push e-invoice ${invoiceId}: ${errorMessage}`);
+        results.push({ invoice_id: invoice.invoice_id, status: "failed", error: errorMessage });
+      }
+    }
+
+    const pageContext = response.page_context;
+    hasMorePages = Boolean(pageContext?.has_more_page);
+    page += 1;
+  }
+
+  logger.success(`Completed e-invoice push run. Processed ${results.length} invoices.`);
+  return { startDate, results };
 }

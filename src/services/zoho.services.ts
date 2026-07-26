@@ -1,9 +1,19 @@
+import { after } from "node:test";
 import { Item } from "../types/zoho.js";
 
 type Method = "GET" | "POST" | "PUT";
 
 type ZohoItemsResponse = {
   items?: Array<Record<string, unknown>>;
+  page_context?: {
+    page?: number;
+    has_more_page?: boolean;
+    per_page?: number;
+  };
+};
+
+type ZohoInvoicesResponse = {
+  invoices?: Array<Record<string, unknown>>;
   page_context?: {
     page?: number;
     has_more_page?: boolean;
@@ -66,3 +76,12 @@ export async function updateItem(authToken: string, itemId: string, item: Partia
 }
 
 
+export async function pushEInvoice(authToken: string, invoiceId: string) {
+  const response = await zohoApi(`/invoices/${invoiceId}/einvoice/push`, authToken, {}, "POST");
+  return response
+}
+
+export async function getInvoices(authToken: string, date: string, page = 1) {
+  const response = await zohoApi("invoices", authToken, { date_after: date, page }, "GET");
+  return response as ZohoInvoicesResponse;
+}

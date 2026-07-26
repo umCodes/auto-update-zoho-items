@@ -33,13 +33,3 @@ export async function refreshZohoAccessToken() {
 
     return `Bearer ${access_token}`;
 }
-
-export async function refreshZohoToken(req: Request, _: Response, next: NextFunction) {
-    try {
-        req.headers['Authorization'] = await refreshZohoAccessToken();
-        return next();
-    } catch (error) {
-        console.error(error);
-        return next(error);
-    }
-}

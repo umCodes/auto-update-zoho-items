@@ -1,13 +1,10 @@
-import express from "express";
 import { config } from "dotenv";
 import { refreshZohoAccessToken } from "./middlewares/zoho.middleware.js";
-import { editAndUpdateItems } from "./utils/zoho.js";
+import { editAndUpdateItems, pushDailyEInvoices } from "./utils/zoho.js";
 import { createLogger } from "./utils/logger.js";
 
 config();
 
-const PORT = process.env.PORT || 3000;
-const app = express();
 const logger = createLogger("app");
 
 let isDailyRunInProgress = false;
@@ -23,8 +20,10 @@ async function runDailyUpdate() {
 
     try {
         const authToken = await refreshZohoAccessToken();
+        await pushDailyEInvoices(authToken)
         await editAndUpdateItems(authToken);
         logger.success("Daily Zoho item update run completed.");
+        return
     } catch (error) {
         logger.error("Daily Zoho item update run failed:", error);
     } finally {
@@ -32,16 +31,7 @@ async function runDailyUpdate() {
     }
 }
 
-app.get("/", async (_req, res) => {
-    res.json({ status: "running", nextRun: "every 24 hours" });
-});
+await runDailyUpdate();
 
-app.listen(PORT, () => {
-    logger.success(`Server is running on port ${PORT}`);
-    void runDailyUpdate();
-    setInterval(() => {
-        void runDailyUpdate();
-    }, 24 * 60 * 60 * 1000);
-});
 
 

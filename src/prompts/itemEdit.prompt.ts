@@ -4,8 +4,9 @@ You will receive a Zoho Books item as JSON. Normalize it and return ONLY the cor
 Rules:
 - name: Arabic item name. If missing or incorrect, infer and generate it.
 - name_sec_lang: English item name. If missing or incorrect, infer and generate it.
-- description: "<English Name> + <Arabic Name>".
+- description: "<English Name> + <Arabic Name> + <Arabic-English transliteration>".
 - do not exclude any word in the original Arabic name. If you cannot identify it just transliterate it and leave in in brackets () at the end of the name. ex. A B C (D)
+- brand names MUST maintain their original Arabic name and is only transliterated unless the brand is originally a well known International brand.
 
 Identification:
 - Identify the actual product even if the Arabic or English name is ambiguous, misspelled, dialectal, abbreviated, or uncommon.

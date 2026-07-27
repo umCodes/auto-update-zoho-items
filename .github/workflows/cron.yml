@@ -3,8 +3,8 @@ name: Scheduled Cron
 on:
   schedule:
     # Every day at 2:00 AM UTC
-    - cron: "0 23 * * *"
-
+    - cron: "30 22 * * *"
+    - cron: "43 2 * * *"
   # Allows you to run it manually from GitHub
   workflow_dispatch:
 
